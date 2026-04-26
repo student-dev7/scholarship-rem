@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #ffffff;
+  --color-accent: #3b82f6;
+  --color-text: #1f2937;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  @apply bg-white text-gray-800 antialiased;
+  min-height: 100dvh;
+}
+
+/* iOS PWA / safe area */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-pt {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

@@ -1,0 +1,34 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next
+/.next/
+out/
+
+# production
+/build
+dist
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env（.env.example のみ追跡可）
+.env*
+!.env.example
+.envrc
+
+# misc
+.DS_Store
+*.tsbuildinfo
+.vercel
+
+# ローカル監視スナップ（CI は cache を使用）
+last_news.txt

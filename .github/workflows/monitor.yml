@@ -1,0 +1,34 @@
+name: JASSO news monitor
+
+on:
+  schedule:
+    - cron: "0 * * * *" # 毎時
+  workflow_dispatch: {}
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Restore last_news
+        uses: actions/cache/restore@v4
+        with:
+          path: last_news.txt
+          key: jasso-state-run-${{ github.run_id }}
+          restore-keys: jasso-state-run-
+      - name: Install
+        run: npm ci
+      - name: Run monitor
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: npm run monitor
+      - name: Save last_news for next run
+        if: always() && hashFiles('last_news.txt') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: last_news.txt
+          key: jasso-state-run-${{ github.run_id }}
