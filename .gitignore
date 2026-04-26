@@ -32,3 +32,8 @@ yarn-error.log*
 
 # ローカル監視スナップ（CI は cache を使用）
 last_news.txt
+
+# PWA ビルドで生成（@ducanh2912/next-pwa / 本番は deploy 時に再生成）
+public/sw.js
+public/swe-worker-*.js
+public/workbox-*.js
