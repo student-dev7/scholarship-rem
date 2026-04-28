@@ -89,7 +89,7 @@ export function buildReminderWindowSummary(
   settings: JassoSettings
 ): { title: string; from: string; to: string }[] {
   return [
-    { title: "在籍報告 入力期間 (JASSO)", from: settings.reportStart, to: settings.reportEnd },
-    { title: "継続願 入力期間 (JASSO)", from: settings.continueStart, to: settings.continueEnd },
+    { title: "在籍報告 入力期間", from: settings.reportStart, to: settings.reportEnd },
+    { title: "継続願 入力期間", from: settings.continueStart, to: settings.continueEnd },
   ];
 }

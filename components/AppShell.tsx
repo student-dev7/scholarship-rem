@@ -10,7 +10,7 @@ const nav = [
   { href: "/", label: "ホーム" },
   { href: "/simulator", label: "貸与履歴・計算（Simulator）" },
   { href: "/vault", label: "セキュアメモ（Vault）" },
-  { href: "/legal-guard", label: "猶予・救済（Legal Guard）" },
+  { href: "/legal-guard", label: "返還猶予・減額返還判定（Legal Guard）" },
   { href: "/settings", label: "設定" },
   { href: "/notification-settings", label: "通知設定" },
 ] as const;

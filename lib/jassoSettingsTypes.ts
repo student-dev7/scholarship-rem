@@ -14,8 +14,8 @@ export type JassoSettings = {
 };
 
 export const JASSO_SETTINGS_DEFAULT: JassoSettings = {
-  reportStart: "",
-  reportEnd: "",
-  continueStart: "",
-  continueEnd: "",
+  reportStart: "2026-04-14",
+  reportEnd: "2026-04-22",
+  continueStart: "2026-12-16",
+  continueEnd: "2027-01-18",
 };

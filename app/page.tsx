@@ -10,9 +10,14 @@ import {
 } from "@/lib/jassoReminders";
 import { Calendar, Clock, Info } from "lucide-react";
 
-function fmt(d: string) {
-  if (!d) return "未設定";
-  return d;
+/** YYYY-MM-DD → 2026/4/14（先頭ゼロなし） */
+function toSlashYmd(ymd: string): string {
+  if (!ymd) return "";
+  const m = ymd.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m) {
+    return `${m[1]}/${Number(m[2])}/${Number(m[3])}`;
+  }
+  return ymd;
 }
 
 function fmtDate(d: Date) {
@@ -34,6 +39,10 @@ export default function Home() {
   const nextPay = useMemo(() => nextTransferDay(new Date()), []);
   return (
     <div className="mx-auto w-full max-w-md space-y-4">
+      <p className="rounded-lg border border-blue-100 bg-blue-50/90 px-3 py-2.5 text-sm leading-relaxed text-blue-900">
+        継続願の入力期間は未定です。
+        決定次第バナー通知を送信します。
+      </p>
       <h1 className="text-lg font-semibold text-gray-800">ダッシュボード</h1>
       {error && (
         <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-sm text-amber-900">
@@ -51,17 +60,26 @@ export default function Home() {
           <p className="text-sm text-gray-500">読み込み中…</p>
         ) : (
           <ul className="space-y-2 text-sm text-gray-800">
-            {windows.map((w) => (
-              <li
-                key={w.title}
-                className="flex flex-col gap-0.5 rounded-md bg-gray-50/80 px-3 py-2"
-              >
-                <span className="text-xs text-gray-500">{w.title}</span>
-                <span>
-                  {fmt(w.from)} 〜 {fmt(w.to)}
-                </span>
-              </li>
-            ))}
+            {windows.map((w) => {
+              const isContinue = w.title.startsWith("継続願");
+              const hasRange = Boolean(w.from && w.to);
+              const line = (() => {
+                if (hasRange) {
+                  const r = `${toSlashYmd(w.from)}~${toSlashYmd(w.to)}`;
+                  return isContinue ? `${r}程度（未定）` : r;
+                }
+                return isContinue ? "—（未定）" : "未設定";
+              })();
+              return (
+                <li
+                  key={w.title}
+                  className="flex flex-col gap-0.5 rounded-md bg-gray-50/80 px-3 py-2"
+                >
+                  <span className="text-xs text-gray-500">{w.title}</span>
+                  <span>{line}</span>
+                </li>
+              );
+            })}
           </ul>
         )}
         {offsetDays > 0 && (
