@@ -279,72 +279,84 @@ export default function SimulatorPage() {
                     <div className="mt-1 grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <p>開始</p>
-                        <div className="flex gap-1">
-                          <select
-                            className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                            value={h.start.year}
-                            onChange={(e) =>
-                              updateHistory(setT1Histories, h.id, {
-                                start: { ...h.start, year: Number(e.target.value) },
-                              })
-                            }
-                          >
-                            {YEAR_OPTIONS.map((y) => (
-                              <option key={`t1-sy-${h.id}-${y}`} value={y}>
-                                {y}年
-                              </option>
-                            ))}
-                          </select>
-                          <select
-                            className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                            value={h.start.month}
-                            onChange={(e) =>
-                              updateHistory(setT1Histories, h.id, {
-                                start: { ...h.start, month: Number(e.target.value) },
-                              })
-                            }
-                          >
-                            {MONTH_OPTIONS.map((m) => (
-                              <option key={`t1-sm-${h.id}-${m}`} value={m}>
-                                {m}月
-                              </option>
-                            ))}
-                          </select>
+                        <div className="flex flex-wrap gap-2">
+                          <div className="inline-flex items-center gap-1">
+                            <select
+                              className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+                              value={h.start.year}
+                              onChange={(e) =>
+                                updateHistory(setT1Histories, h.id, {
+                                  start: { ...h.start, year: Number(e.target.value) },
+                                })
+                              }
+                            >
+                              {YEAR_OPTIONS.map((y) => (
+                                <option key={`t1-sy-${h.id}-${y}`} value={y}>
+                                  {y}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="text-xs text-gray-500">年</span>
+                          </div>
+                          <div className="inline-flex items-center gap-1">
+                            <select
+                              className="w-20 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+                              value={h.start.month}
+                              onChange={(e) =>
+                                updateHistory(setT1Histories, h.id, {
+                                  start: { ...h.start, month: Number(e.target.value) },
+                                })
+                              }
+                            >
+                              {MONTH_OPTIONS.map((m) => (
+                                <option key={`t1-sm-${h.id}-${m}`} value={m}>
+                                  {m}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="text-xs text-gray-500">月</span>
+                          </div>
                         </div>
                       </div>
                       <div className="space-y-1">
                         <p>終了</p>
-                        <div className="flex gap-1">
-                          <select
-                            className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                            value={h.end.year}
-                            onChange={(e) =>
-                              updateHistory(setT1Histories, h.id, {
-                                end: { ...h.end, year: Number(e.target.value) },
-                              })
-                            }
-                          >
-                            {YEAR_OPTIONS.map((y) => (
-                              <option key={`t1-ey-${h.id}-${y}`} value={y}>
-                                {y}年
-                              </option>
-                            ))}
-                          </select>
-                          <select
-                            className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                            value={h.end.month}
-                            onChange={(e) =>
-                              updateHistory(setT1Histories, h.id, {
-                                end: { ...h.end, month: Number(e.target.value) },
-                              })
-                            }
-                          >
-                            {MONTH_OPTIONS.map((m) => (
-                              <option key={`t1-em-${h.id}-${m}`} value={m}>
-                                {m}月
-                              </option>
-                            ))}
-                          </select>
+                        <div className="flex flex-wrap gap-2">
+                          <div className="inline-flex items-center gap-1">
+                            <select
+                              className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+                              value={h.end.year}
+                              onChange={(e) =>
+                                updateHistory(setT1Histories, h.id, {
+                                  end: { ...h.end, year: Number(e.target.value) },
+                                })
+                              }
+                            >
+                              {YEAR_OPTIONS.map((y) => (
+                                <option key={`t1-ey-${h.id}-${y}`} value={y}>
+                                  {y}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="text-xs text-gray-500">年</span>
+                          </div>
+                          <div className="inline-flex items-center gap-1">
+                            <select
+                              className="w-20 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+                              value={h.end.month}
+                              onChange={(e) =>
+                                updateHistory(setT1Histories, h.id, {
+                                  end: { ...h.end, month: Number(e.target.value) },
+                                })
+                              }
+                            >
+                              {MONTH_OPTIONS.map((m) => (
+                                <option key={`t1-em-${h.id}-${m}`} value={m}>
+                                  {m}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="text-xs text-gray-500">月</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -434,72 +446,84 @@ export default function SimulatorPage() {
                     <div className="mt-1 grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <p>開始</p>
-                        <div className="flex gap-1">
-                          <select
-                            className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                            value={h.start.year}
-                            onChange={(e) =>
-                              updateHistory(setT2Histories, h.id, {
-                                start: { ...h.start, year: Number(e.target.value) },
-                              })
-                            }
-                          >
-                            {YEAR_OPTIONS.map((y) => (
-                              <option key={`t2-sy-${h.id}-${y}`} value={y}>
-                                {y}年
-                              </option>
-                            ))}
-                          </select>
-                          <select
-                            className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                            value={h.start.month}
-                            onChange={(e) =>
-                              updateHistory(setT2Histories, h.id, {
-                                start: { ...h.start, month: Number(e.target.value) },
-                              })
-                            }
-                          >
-                            {MONTH_OPTIONS.map((m) => (
-                              <option key={`t2-sm-${h.id}-${m}`} value={m}>
-                                {m}月
-                              </option>
-                            ))}
-                          </select>
+                        <div className="flex flex-wrap gap-2">
+                          <div className="inline-flex items-center gap-1">
+                            <select
+                              className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+                              value={h.start.year}
+                              onChange={(e) =>
+                                updateHistory(setT2Histories, h.id, {
+                                  start: { ...h.start, year: Number(e.target.value) },
+                                })
+                              }
+                            >
+                              {YEAR_OPTIONS.map((y) => (
+                                <option key={`t2-sy-${h.id}-${y}`} value={y}>
+                                  {y}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="text-xs text-gray-500">年</span>
+                          </div>
+                          <div className="inline-flex items-center gap-1">
+                            <select
+                              className="w-20 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+                              value={h.start.month}
+                              onChange={(e) =>
+                                updateHistory(setT2Histories, h.id, {
+                                  start: { ...h.start, month: Number(e.target.value) },
+                                })
+                              }
+                            >
+                              {MONTH_OPTIONS.map((m) => (
+                                <option key={`t2-sm-${h.id}-${m}`} value={m}>
+                                  {m}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="text-xs text-gray-500">月</span>
+                          </div>
                         </div>
                       </div>
                       <div className="space-y-1">
                         <p>終了</p>
-                        <div className="flex gap-1">
-                          <select
-                            className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                            value={h.end.year}
-                            onChange={(e) =>
-                              updateHistory(setT2Histories, h.id, {
-                                end: { ...h.end, year: Number(e.target.value) },
-                              })
-                            }
-                          >
-                            {YEAR_OPTIONS.map((y) => (
-                              <option key={`t2-ey-${h.id}-${y}`} value={y}>
-                                {y}年
-                              </option>
-                            ))}
-                          </select>
-                          <select
-                            className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                            value={h.end.month}
-                            onChange={(e) =>
-                              updateHistory(setT2Histories, h.id, {
-                                end: { ...h.end, month: Number(e.target.value) },
-                              })
-                            }
-                          >
-                            {MONTH_OPTIONS.map((m) => (
-                              <option key={`t2-em-${h.id}-${m}`} value={m}>
-                                {m}月
-                              </option>
-                            ))}
-                          </select>
+                        <div className="flex flex-wrap gap-2">
+                          <div className="inline-flex items-center gap-1">
+                            <select
+                              className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+                              value={h.end.year}
+                              onChange={(e) =>
+                                updateHistory(setT2Histories, h.id, {
+                                  end: { ...h.end, year: Number(e.target.value) },
+                                })
+                              }
+                            >
+                              {YEAR_OPTIONS.map((y) => (
+                                <option key={`t2-ey-${h.id}-${y}`} value={y}>
+                                  {y}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="text-xs text-gray-500">年</span>
+                          </div>
+                          <div className="inline-flex items-center gap-1">
+                            <select
+                              className="w-20 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+                              value={h.end.month}
+                              onChange={(e) =>
+                                updateHistory(setT2Histories, h.id, {
+                                  end: { ...h.end, month: Number(e.target.value) },
+                                })
+                              }
+                            >
+                              {MONTH_OPTIONS.map((m) => (
+                                <option key={`t2-em-${h.id}-${m}`} value={m}>
+                                  {m}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="text-xs text-gray-500">月</span>
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -1,12 +1,12 @@
 "use client";
 
 import { GoogleAuthProvider, signInWithPopup, signOut, type User } from "firebase/auth";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isAdminEmail } from "@/lib/adminConfig";
 import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase";
-import { runPushBroadcastFromAdmin } from "./actions";
+import { runPushBroadcastFromAdmin, runPushTestToTokenFromAdmin } from "./actions";
 
 const COL = "settings";
 const DOC = "app";
@@ -19,6 +19,34 @@ function AdminForm() {
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [pushMsg, setPushMsg] = useState<string | null>(null);
+  const [testToken, setTestToken] = useState("");
+  const [testPushMsg, setTestPushMsg] = useState<string | null>(null);
+  const [testBusy, setTestBusy] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      if (!isFirebaseConfigured()) return;
+      const db = getFirebaseDb();
+      if (!db) return;
+      try {
+        const ref = doc(db, COL, DOC);
+        const snap = await getDoc(ref);
+        if (!alive || !snap.exists()) return;
+        const d = snap.data() as Record<string, unknown>;
+        const s = (k: string) => (typeof d[k] === "string" ? d[k] : "");
+        setReportStart(s("reportStart"));
+        setReportEnd(s("reportEnd"));
+        setContinueStart(s("continueStart"));
+        setContinueEnd(s("continueEnd"));
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,14 +100,36 @@ function AdminForm() {
     }
   };
 
+  const onPushTestOne = async () => {
+    setTestPushMsg(null);
+    setTestBusy(true);
+    try {
+      const r = await runPushTestToTokenFromAdmin(testToken);
+      if (r.data?.message) {
+        setTestPushMsg(r.data.message);
+      } else {
+        setTestPushMsg(r.error || "未設定");
+      }
+    } catch (e) {
+      setTestPushMsg(e instanceof Error ? e.message : "エラー");
+    } finally {
+      setTestBusy(false);
+    }
+  };
+
   return (
     <form
       onSubmit={onSave}
       className="mt-4 space-y-3 rounded-lg border border-gray-100 bg-white p-4 shadow-sm"
     >
-      <h2 className="text-sm font-medium text-gray-800">JASSO 入力期間（全ユーザー共通表示）</h2>
+      <h2 className="text-sm font-medium text-gray-800">在学届／継続願・入力期限（Firestore 保存）</h2>
+      <p className="text-xs text-gray-500">
+        Vercel Cron は毎日{" "}
+        <code className="rounded bg-gray-50 px-1">GET /api/send-push</code>（UTC 15:00＝日本時間 0:00
+        直後、`vercel.json`）でここに保存した<span className="font-medium">終了日</span>と照合し、自動プッシュします。
+      </p>
       <label className="block text-xs text-gray-500">
-        在籍報告 開始
+        在学届（在籍報告）開始日
         <input
           className="mt-0.5 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
           type="date"
@@ -88,7 +138,7 @@ function AdminForm() {
         />
       </label>
       <label className="block text-xs text-gray-500">
-        在籍報告 終了
+        在学届（在籍報告）終了日
         <input
           className="mt-0.5 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
           type="date"
@@ -97,7 +147,7 @@ function AdminForm() {
         />
       </label>
       <label className="block text-xs text-gray-500">
-        継続願 開始
+        継続願 開始日
         <input
           className="mt-0.5 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
           type="date"
@@ -106,7 +156,7 @@ function AdminForm() {
         />
       </label>
       <label className="block text-xs text-gray-500">
-        継続願 終了
+        継続願 終了日
         <input
           className="mt-0.5 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
           type="date"
@@ -117,25 +167,51 @@ function AdminForm() {
       {msg && <p className="text-sm text-blue-600">{msg}</p>}
       <button
         type="submit"
-        disabled={busy}
+        disabled={busy || testBusy}
         className="w-full rounded-lg bg-gray-800 py-2.5 text-sm font-medium text-white hover:bg-gray-900 disabled:opacity-50"
       >
         更新
       </button>
       <p className="pt-1 text-xs text-gray-500">
-        管理 API: <code className="rounded bg-gray-50 px-1">POST /api/send-push</code> に
-        <code className="rounded bg-gray-50 px-1">Authorization: Bearer ADMIN_API_SECRET</code>。
-        画面の下はサーバアクションで雛形を呼び出し、秘密をクライアントに渡しません。
+        Cron: <code className="rounded bg-gray-50 px-1">GET /api/send-push</code> も同じ Bearer。Vercel では{" "}
+        <code className="rounded bg-gray-50 px-1">CRON_SECRET</code> を{" "}
+        <code className="rounded bg-gray-50 px-1">ADMIN_API_SECRET</code> と同じ値にしてください。
+        手動 API: <code className="rounded bg-gray-50 px-1">POST /api/send-push</code>、JSON の{" "}
+        <code className="rounded bg-gray-50 px-1">onlyToken</code> で単体送信可能。
       </p>
       <button
         type="button"
         onClick={() => void onPush()}
-        disabled={busy}
+        disabled={busy || testBusy}
         className="w-full rounded-lg border border-blue-200 bg-blue-50 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
       >
-        プッシュ一斉送信（雛形・サーバ内処理）
+        プッシュ一斉送信（サーバ内処理）
       </button>
       {pushMsg && <p className="text-xs text-gray-600">{pushMsg}</p>}
+
+      <div className="space-y-2 border-t border-gray-100 pt-3">
+        <h3 className="text-xs font-medium text-gray-700">単体デバッグ（この端末だけ）</h3>
+        <p className="text-xs text-gray-500">
+          スマホの <code className="rounded bg-gray-50 px-1">通知設定</code> でトークンをコピーし、ここに貼り付けてください。
+          アプリをホームから閉じた状態でも届くか確かめられます。
+        </p>
+        <textarea
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 font-mono text-xs"
+          placeholder="FCM トークン全文"
+          rows={3}
+          value={testToken}
+          onChange={(e) => setTestToken(e.target.value)}
+        />
+        <button
+          type="button"
+          onClick={() => void onPushTestOne()}
+          disabled={busy || testBusy || !testToken.trim()}
+          className="w-full rounded-lg border border-violet-200 bg-violet-50 py-2.5 text-sm font-medium text-violet-800 hover:bg-violet-100 disabled:opacity-50"
+        >
+          このトークン宛にテスト送信（FCM）
+        </button>
+        {testPushMsg && <p className="text-xs text-gray-600">{testPushMsg}</p>}
+      </div>
     </form>
   );
 }
