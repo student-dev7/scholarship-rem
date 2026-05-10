@@ -20,9 +20,8 @@ function unauthorized(): NextResponse {
 }
 
 /**
- * Vercel Cron — JST で「終了の3日前・前日・当日」に該当すれば自動送信。
+ * Vercel Cron — JST で「開始3日前・開始当日・終了前日」に該当すれば自動送信。
  * Authorization: Bearer {ADMIN_API_SECRET}。
- * （Vercel は CRON_SECRET を Bearer で送るため、プロジェクト環境変数 ADMIN_API_SECRET と CRON_SECRET を同一値にしてください。）
  */
 export async function GET(request: Request) {
   const authOk = verifyAdminBearer(request.headers.get("Authorization"));

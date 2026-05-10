@@ -39,7 +39,7 @@ function readOffset(): number {
   const v = localStorage.getItem(OFFSET_KEY);
   if (v === null) return 0;
   const n = parseInt(v, 10);
-  return Number.isFinite(n) ? Math.min(30, Math.max(0, n)) : 0;
+  return Number.isFinite(n) ? Math.min(30, Math.max(-30, n)) : 0;
 }
 
 /**
@@ -78,7 +78,7 @@ export function useLocalData() {
   }, []);
 
   const setOffsetDays = useCallback((d: number) => {
-    const n = Math.min(30, Math.max(0, Math.floor(d)));
+    const n = Math.min(30, Math.max(-30, Math.floor(d)));
     setOffsetDaysState(n);
     try {
       localStorage.setItem(OFFSET_KEY, String(n));

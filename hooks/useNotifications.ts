@@ -108,7 +108,11 @@ export function useNotifications() {
       }
     } catch (e) {
       const err = e instanceof Error ? e.message : String(e);
-      setState((s) => ({ ...s, lastError: err }));
+      if (/missing or insufficient permissions/i.test(err)) {
+        setState((s) => ({ ...s, lastError: null }));
+      } else {
+        setState((s) => ({ ...s, lastError: err }));
+      }
     }
   }, [persistToken]);
 

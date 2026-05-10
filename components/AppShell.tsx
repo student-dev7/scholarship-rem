@@ -10,7 +10,7 @@ const nav = [
   { href: "/", label: "ホーム" },
   { href: "/simulator", label: "貸与履歴・計算（Simulator）" },
   { href: "/vault", label: "セキュアメモ（Vault）" },
-  { href: "/legal-guard", label: "返還猶予・減額返還判定（Legal Guard）" },
+  { href: "/legal-guard", label: "返還猶予・減額返還判定" },
   { href: "/settings", label: "設定" },
   { href: "/notification-settings", label: "通知設定" },
 ] as const;
@@ -62,6 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           onClick={() => setOpen((v) => !v)}
           className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-800 transition hover:bg-gray-50"
           aria-label="メニューを開く"
+          aria-expanded={open}
         >
           <Menu className="h-6 w-6" />
         </button>
@@ -78,8 +79,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div
         className={
-          "safe-pb fixed left-0 top-0 z-40 flex h-full w-[min(20rem,88vw)] flex-col border-r border-gray-100 bg-white shadow-lg transition-transform duration-200 ease-out " +
-          (open ? "translate-x-0" : "-translate-x-full")
+          "safe-pb fixed right-0 top-0 z-40 flex h-full w-[min(20rem,88vw)] flex-col border-l border-gray-100 bg-white shadow-lg transition-transform duration-200 ease-out " +
+          (open ? "translate-x-0" : "translate-x-full")
         }
       >
         <div className="safe-pt flex h-14 items-center border-b border-gray-100 px-4 text-sm font-semibold text-gray-800">

@@ -1,7 +1,7 @@
 import type { JassoSettings } from "./jassoSettingsTypes";
 
-/** ダッシュボード用スクフォールド（Cron と同じ「終了の3日前・前日・当日」基準／offset は終了日に適用）。 */
-export { getEndDateReminderScaffold as getPendingReminderScaffold } from "./reminderCronMessages";
+/** ダッシュボード用（自動通知と同じ「開始3日前・開始日・終了前日」／設定の前倒し日数を反映） */
+export { getThreePhaseReminderScaffold as getPendingReminderScaffold } from "./reminderCronMessages";
 
 /**
  * 入力期間（開始/終了）のウィンドウ表示用。

@@ -2,9 +2,7 @@ import type { BroadcastInput } from "./broadcastPushStub";
 import type { JassoSettings } from "./jassoSettingsTypes";
 import { addCalendarDaysYmd, getTodayJstYmd } from "./jstDate";
 
-export type EndReminderPhase = "threeDaysBeforeEnd" | "dayBeforeEnd" | "endDay";
-
-type PhaseMatch = { phase: EndReminderPhase; endYmd: string };
+export type ReminderPhaseKind = "threeDaysBeforeStart" | "startDay" | "dayBeforeEnd";
 
 function slashYmd(ymd: string): string {
   const m = ymd.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -12,62 +10,76 @@ function slashYmd(ymd: string): string {
   return `${Number(m[1])}/${Number(m[2])}/${Number(m[3])}`;
 }
 
-function phasesForEndAgainstToday(endYmd: string, todayJstYmd: string): PhaseMatch[] {
-  const d3 = addCalendarDaysYmd(endYmd, -3);
-  const d1 = addCalendarDaysYmd(endYmd, -1);
-  if (!d3 || !d1) return [];
-  const out: PhaseMatch[] = [];
-  if (todayJstYmd === d3) out.push({ phase: "threeDaysBeforeEnd", endYmd });
-  if (todayJstYmd === d1) out.push({ phase: "dayBeforeEnd", endYmd });
-  if (todayJstYmd === endYmd) out.push({ phase: "endDay", endYmd });
-  return out;
-}
-
-function buildPayload(
+function buildPayloadForPhase(
   taskLabel: string,
-  endDisplay: string,
-  phase: EndReminderPhase
+  phase: ReminderPhaseKind,
+  startYmd: string,
+  endYmd: string,
+  endOk: boolean
 ): BroadcastInput {
-  const endBr = slashYmd(endDisplay);
-  if (phase === "threeDaysBeforeEnd") {
+  const startBr = slashYmd(startYmd);
+  const endBr = slashYmd(endYmd);
+  if (phase === "threeDaysBeforeStart") {
     return {
-      title: `${taskLabel}｜締切まであと3日`,
-      body: `入力期間の終了は ${endBr} です。スカラネットと大学の案内を確認してください。`,
+      title: `${taskLabel}｜入力開始まであと3日`,
+      body: `入力期間は ${startBr} からです。大学の案内とスカラネットを確認してください。`,
       link: "/",
     };
   }
-  if (phase === "dayBeforeEnd") {
+  if (phase === "startDay") {
     return {
-      title: `${taskLabel}｜明日が締切です`,
-      body: `入力期間は明日 ${endBr} が最終日です。未完了の方はお早めにご対応ください。`,
+      title: `${taskLabel}｜入力期間が始まります`,
+      body: endOk
+        ? `本日 ${startBr} から入力できます。期限は ${endBr} です。`
+        : `本日 ${startBr} から入力期間が始まります。大学の案内を確認してください。`,
       link: "/",
     };
   }
   return {
-    title: `${taskLabel}｜本日が締切です`,
-    body: `今日 ${endBr} が入力期限です。申請の途中でも提出状況を確認してください。`,
+    title: `${taskLabel}｜明日が締切です`,
+    body: `入力期間は明日 ${endBr} が最終日です。未完了の方はお早めにご対応ください。`,
     link: "/",
   };
 }
 
-/** Cron 用: JST「今日」と Firestore の終了日のみ比較（offset なし） */
+/** Cron: JST「今日」が開始3日前・開始当日・終了前日のいずれかに該当すれば送信 */
 export function buildCronReminderBroadcasts(
   settings: JassoSettings,
   todayJstYmd: string
 ): BroadcastInput[] {
-  const tasks: { label: string; endField: string }[] = [
-    { label: "在学届（在籍報告）", endField: settings.reportEnd },
-    { label: "継続願", endField: settings.continueEnd },
+  const tasks: { label: string; startField: string; endField: string }[] = [
+    { label: "在学届（在籍報告）", startField: settings.reportStart, endField: settings.reportEnd },
+    { label: "継続願", startField: settings.continueStart, endField: settings.continueEnd },
   ];
   const payloads: BroadcastInput[] = [];
-  for (const { label, endField } of tasks) {
+
+  for (const { label, startField, endField } of tasks) {
+    const start = startField?.trim();
     const end = endField?.trim();
-    if (!end || !/^\d{4}-\d{2}-\d{2}$/.test(end)) continue;
-    const matches = phasesForEndAgainstToday(end, todayJstYmd);
-    for (const { phase, endYmd } of matches) {
-      payloads.push(buildPayload(label, endYmd, phase));
+    const startOk = Boolean(start && /^\d{4}-\d{2}-\d{2}$/.test(start));
+    const endOk = Boolean(end && /^\d{4}-\d{2}-\d{2}$/.test(end));
+
+    if (startOk) {
+      const d3 = addCalendarDaysYmd(start, -3);
+      if (d3 && todayJstYmd === d3) {
+        payloads.push(
+          buildPayloadForPhase(label, "threeDaysBeforeStart", start, endOk ? end! : start, endOk)
+        );
+      }
+      if (todayJstYmd === start) {
+        payloads.push(buildPayloadForPhase(label, "startDay", start, endOk ? end! : start, endOk));
+      }
+    }
+
+    if (endOk) {
+      const dBeforeEnd = addCalendarDaysYmd(end!, -1);
+      if (dBeforeEnd && todayJstYmd === dBeforeEnd) {
+        const startRef = startOk ? start! : end!;
+        payloads.push(buildPayloadForPhase(label, "dayBeforeEnd", startRef, end!, true));
+      }
     }
   }
+
   return payloads;
 }
 
@@ -77,52 +89,62 @@ function ymdToUtcNoonDate(ymd: string): Date {
 }
 
 /**
- * ダッシュボード用: 終了日基準の3段階と JST の「今日」を比較（offset は終了日の前倒し日数）。
+ * ダッシュボード用: 開始3日前・開始日・終了前日（offset 日だけ期間を前にずらして表示）
  */
-export function getEndDateReminderScaffold(
+export function getThreePhaseReminderScaffold(
   settings: JassoSettings,
   now: Date = new Date(),
   offsetDays: number = 0
-): { label: string; wouldFireToday: boolean; eventDate: Date; note: string }[] {
+): { label: string; wouldFireToday: boolean; eventDate: Date }[] {
   const todayJst = getTodayJstYmd(now);
-  const rows: { label: string; wouldFireToday: boolean; eventDate: Date; note: string }[] = [];
+  const rows: { label: string; wouldFireToday: boolean; eventDate: Date }[] = [];
 
   const events = [
-    { title: "在学届（在籍報告）", end: settings.reportEnd },
-    { title: "継続願", end: settings.continueEnd },
+    { title: "在学届（在籍報告）", start: settings.reportStart, end: settings.reportEnd },
+    { title: "継続願", start: settings.continueStart, end: settings.continueEnd },
   ];
 
-  const slots: { phase: EndReminderPhase; suffix: string; note: string }[] = [
-    { phase: "threeDaysBeforeEnd", suffix: "終了の3日前", note: "Vercel Cron と同じ基準（表示は offset 適用終了日）" },
-    { phase: "dayBeforeEnd", suffix: "終了の前日", note: "同上" },
-    { phase: "endDay", suffix: "終了当日", note: "同上" },
+  const slots: { phase: ReminderPhaseKind; suffix: string }[] = [
+    { phase: "threeDaysBeforeStart", suffix: "開始の3日前" },
+    { phase: "startDay", suffix: "開始当日" },
+    { phase: "dayBeforeEnd", suffix: "終了の前日" },
   ];
 
   for (const ev of events) {
+    const rawStart = ev.start?.trim();
     const rawEnd = ev.end?.trim();
-    if (!rawEnd || !/^\d{4}-\d{2}-\d{2}$/.test(rawEnd)) continue;
-    const effectiveEnd =
-      offsetDays !== 0
-        ? addCalendarDaysYmd(rawEnd, -offsetDays) ?? rawEnd
-        : rawEnd;
+    const startOk = Boolean(rawStart && /^\d{4}-\d{2}-\d{2}$/.test(rawStart));
+    const endOk = Boolean(rawEnd && /^\d{4}-\d{2}-\d{2}$/.test(rawEnd));
 
-    const d3 = addCalendarDaysYmd(effectiveEnd, -3);
-    const d1 = addCalendarDaysYmd(effectiveEnd, -1);
-    if (!d3 || !d1) continue;
+    const effectiveStart = startOk
+      ? offsetDays !== 0
+        ? addCalendarDaysYmd(rawStart!, -offsetDays) ?? rawStart!
+        : rawStart!
+      : "";
+    const effectiveEnd = endOk
+      ? offsetDays !== 0
+        ? addCalendarDaysYmd(rawEnd!, -offsetDays) ?? rawEnd!
+        : rawEnd!
+      : "";
 
-    const phaseMap: Record<EndReminderPhase, string> = {
-      threeDaysBeforeEnd: d3,
-      dayBeforeEnd: d1,
-      endDay: effectiveEnd,
-    };
+    const esOk = Boolean(effectiveStart && /^\d{4}-\d{2}-\d{2}$/.test(effectiveStart));
+    const eeOk = Boolean(effectiveEnd && /^\d{4}-\d{2}-\d{2}$/.test(effectiveEnd));
 
     for (const slot of slots) {
-      const ymd = phaseMap[slot.phase];
+      let ymd: string | null = null;
+      if (slot.phase === "threeDaysBeforeStart" && esOk) {
+        ymd = addCalendarDaysYmd(effectiveStart, -3);
+      } else if (slot.phase === "startDay" && esOk) {
+        ymd = effectiveStart;
+      } else if (slot.phase === "dayBeforeEnd" && eeOk) {
+        ymd = addCalendarDaysYmd(effectiveEnd, -1);
+      }
+      if (!ymd) continue;
+
       rows.push({
         label: `${ev.title}・${slot.suffix}`,
         wouldFireToday: ymd === todayJst,
         eventDate: ymdToUtcNoonDate(ymd),
-        note: slot.note,
       });
     }
   }

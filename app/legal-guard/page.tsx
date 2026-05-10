@@ -9,8 +9,6 @@ import {
   Shield,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { LegalInlineBlock } from "@/components/Footer";
-
 const INCOME_CUT = 3_000_000;
 const INDICATOR_MAX = 6_000_000;
 const JASSO_HARDSHIP_URL = "https://www.jasso.go.jp/shogakukin/henkan_konnan/";
@@ -171,7 +169,7 @@ export default function LegalGuardPage() {
 
       {underCut && (
         <section className="rounded-2xl border border-blue-200 bg-blue-50/60 p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-blue-900">次のステップ（アクション）</h2>
+          <h2 className="text-sm font-semibold text-blue-900">次のステップ</h2>
           <ul className="mt-3 space-y-2 text-sm text-blue-900">
             <li className="flex items-start gap-2">
               <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0" />
@@ -204,9 +202,6 @@ export default function LegalGuardPage() {
         この判定はあくまで年収のみに基づいた目安であり、世帯人数や特別な事情（病気・災害）は考慮されていません。
       </p>
 
-      <div className="rounded-xl border-2 border-amber-300 bg-amber-50/70 p-3 shadow-sm">
-        <LegalInlineBlock />
-      </div>
     </div>
   );
 }
