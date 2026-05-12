@@ -43,7 +43,10 @@ export async function GET(request: Request) {
   try {
     settings = await fetchJassoSettingsAdmin();
   } catch (e) {
-    console.error("[send-push cron] fetchJassoSettingsAdmin", e);
+    console.error(
+      "[send-push cron] fetchJassoSettingsAdmin (or Firebase Admin init — check FIREBASE_SERVICE_ACCOUNT_JSON_*)",
+      e
+    );
     return NextResponse.json({ ok: false, error: "settings_read_failed" }, { status: 500 });
   }
 
