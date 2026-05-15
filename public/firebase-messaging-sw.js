@@ -22,6 +22,6 @@ loadFirebaseConfig()
       return self.registration.showNotification(title, options);
     });
   })
-  .catch(() => {
-    // ignore initialization failure in SW
+  .catch((e) => {
+    console.error("[firebase-messaging-sw] init failed", e);
   });

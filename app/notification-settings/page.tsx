@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useState } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
+import { getOrCreateDeviceId } from "@/hooks/useLocalData";
 import { Bell, X } from "lucide-react";
 import { LegalInlineBlock } from "@/components/Footer";
 
@@ -97,9 +98,39 @@ export default function NotificationSettingsPage() {
   const modalTitleId = useId();
   const { permission, fcmToken, lastError, requestAndRegister } = useNotifications();
   const [howToOpen, setHowToOpen] = useState(false);
+  const [serverTestLoading, setServerTestLoading] = useState(false);
+  const [serverTestMsg, setServerTestMsg] = useState<string | null>(null);
 
   const openHowTo = useCallback(() => setHowToOpen(true), []);
   const closeHowTo = useCallback(() => setHowToOpen(false), []);
+
+  const runServerPushTest = useCallback(async () => {
+    setServerTestMsg(null);
+    const token = fcmToken?.trim();
+    if (!token) {
+      setServerTestMsg("先に「通知を有効化」でトークンを取得してください。");
+      return;
+    }
+    const deviceId = getOrCreateDeviceId();
+    if (!deviceId || deviceId === "anon") {
+      setServerTestMsg("端末IDを保存できませんでした（ストレージを確認してください）。");
+      return;
+    }
+    setServerTestLoading(true);
+    try {
+      const res = await fetch("/api/push-test-self", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId, fcmToken: token }),
+      });
+      const data = (await res.json()) as { ok?: boolean; message?: string };
+      setServerTestMsg(data.message ?? (res.ok ? "リクエストを送信しました。" : `エラー (${res.status})`));
+    } catch (e) {
+      setServerTestMsg(e instanceof Error ? e.message : "通信に失敗しました。");
+    } finally {
+      setServerTestLoading(false);
+    }
+  }, [fcmToken]);
 
   const permissionLabel =
     permission === "granted"
@@ -146,9 +177,27 @@ export default function NotificationSettingsPage() {
           スマホでの設定手順を見る
         </button>
         {fcmToken && (
-          <p className="text-xs text-gray-500">
-            この端末では通知の登録ができています。
-          </p>
+          <>
+            <p className="text-xs text-gray-500">
+              この端末では通知の登録ができています。
+            </p>
+            <button
+              type="button"
+              disabled={serverTestLoading || permission !== "granted"}
+              onClick={() => void runServerPushTest()}
+              className="w-full rounded-lg border border-blue-200 bg-blue-50 py-2.5 text-sm font-medium text-blue-800 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {serverTestLoading ? "送信中…" : "サーバー経由でテスト通知"}
+            </button>
+            <p className="text-xs text-gray-500">
+              Firebase サーバーからこの端末へ1件送ります。PWAを閉じた状態や別タブでもトレイに出るか確認できます。
+            </p>
+            {serverTestMsg && (
+              <p className="text-xs text-gray-700" role="status">
+                {serverTestMsg}
+              </p>
+            )}
+          </>
         )}
       </div>
 

@@ -133,9 +133,10 @@ export function useNotifications() {
         if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
           const t = payload.notification?.title ?? "奨学金リマインダー";
           const b = payload.notification?.body ?? "";
-          if (b) {
+          // タイトルのみのメッセージでも表示する（本文が空だと従来は何も出なかった）
+          if (t || b) {
             // eslint-disable-next-line no-new
-            new Notification(t, { body: b, icon: "/icons/icon-192x192.png" });
+            new Notification(t || "通知", { body: b, icon: "/icons/icon-192x192.png" });
           }
         }
       });
