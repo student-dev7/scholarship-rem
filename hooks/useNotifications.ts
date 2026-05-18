@@ -8,6 +8,7 @@ import {
   getFirebaseMessaging,
   isFirebaseConfigured,
 } from "@/lib/firebase";
+import { getFcmServiceWorkerRegistration } from "@/lib/fcmServiceWorker";
 import { getOrCreateDeviceId } from "./useLocalData";
 
 const USERS = "users";
@@ -30,26 +31,25 @@ export function useNotifications() {
   });
   const onForegroundRef = useRef<(p: MessagePayload) => void>(() => {});
 
-  const persistToken = useCallback(
-    async (token: string) => {
-      const db = getFirebaseDb();
-      if (!db) return;
-      const deviceId = getOrCreateDeviceId();
-      const userRef = doc(db, USERS, deviceId);
-      const existing = await getDoc(userRef);
-      const body = {
-        fcmToken: token,
-        updatedAt: serverTimestamp(),
-        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
-      };
-      if (existing.exists()) {
-        await updateDoc(userRef, body);
-      } else {
-        await setDoc(userRef, { ...body, deviceId, createdAt: serverTimestamp() });
-      }
-    },
-    []
-  );
+  const persistToken = useCallback(async (token: string) => {
+    const db = getFirebaseDb();
+    if (!db) {
+      throw new Error("Firestore に接続できません");
+    }
+    const deviceId = getOrCreateDeviceId();
+    const userRef = doc(db, USERS, deviceId);
+    const existing = await getDoc(userRef);
+    const body = {
+      fcmToken: token,
+      updatedAt: serverTimestamp(),
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+    };
+    if (existing.exists()) {
+      await updateDoc(userRef, body);
+    } else {
+      await setDoc(userRef, { ...body, deviceId, createdAt: serverTimestamp() });
+    }
+  }, []);
 
   const requestAndRegister = useCallback(async () => {
     if (!isFirebaseConfigured()) {
@@ -83,20 +83,18 @@ export function useNotifications() {
       return;
     }
     try {
-      let reg = await navigator.serviceWorker.getRegistration();
+      const reg = await getFcmServiceWorkerRegistration();
       if (!reg) {
-        try {
-          reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-        } catch {
-          // 既存 (例: PWA) の other SW
-        }
+        setState((s) => ({
+          ...s,
+          lastError: "Service Worker を登録できませんでした。ページを再読み込みしてください。",
+        }));
+        return;
       }
-      if (reg) {
-        try {
-          await reg.update();
-        } catch {
-          // no-op
-        }
+      try {
+        await reg.update();
+      } catch {
+        // no-op
       }
       const token = await getToken(messaging, {
         vapidKey: vapid,
@@ -105,11 +103,22 @@ export function useNotifications() {
       if (token) {
         await persistToken(token);
         setState((s) => ({ ...s, fcmToken: token, lastError: null }));
+      } else {
+        setState((s) => ({
+          ...s,
+          lastError: "FCM トークンを取得できませんでした。",
+        }));
       }
     } catch (e) {
       const err = e instanceof Error ? e.message : String(e);
       if (/missing or insufficient permissions/i.test(err)) {
         setState((s) => ({ ...s, lastError: null }));
+      } else if (/permission-denied|insufficient permissions/i.test(err)) {
+        setState((s) => ({
+          ...s,
+          lastError:
+            "Firestore への保存が拒否されました。Firebase コンソールのセキュリティルールで users への書き込みを許可してください。",
+        }));
       } else {
         setState((s) => ({ ...s, lastError: err }));
       }
@@ -133,7 +142,6 @@ export function useNotifications() {
         if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
           const t = payload.notification?.title ?? "奨学金リマインダー";
           const b = payload.notification?.body ?? "";
-          // タイトルのみのメッセージでも表示する（本文が空だと従来は何も出なかった）
           if (t || b) {
             // eslint-disable-next-line no-new
             new Notification(t || "通知", { body: b, icon: "/icons/icon-192x192.png" });

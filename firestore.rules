@@ -1,0 +1,61 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // NEXT_PUBLIC_ADMIN_EMAILS と同じ管理者メールに差し替えてください
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in [
+          "admin@example.com",
+        ];
+    }
+
+    // JASSO 期限（全員が読み取り、管理者のみ書き込み）
+    match /settings/{docId} {
+      allow read: if docId == "app";
+      allow create, update: if docId == "app" && isAdmin();
+      allow delete: if false;
+    }
+
+    // FCM トークン（端末IDごと。クライアントは自分の doc だけ create/update）
+    match /users/{deviceId} {
+      allow read: if false;
+
+      allow create: if
+        deviceId != "anon"
+        && deviceId.size() > 0
+        && deviceId.size() <= 200
+        && request.resource.data.deviceId == deviceId
+        && request.resource.data.keys().hasOnly([
+          "deviceId",
+          "fcmToken",
+          "createdAt",
+          "updatedAt",
+          "userAgent",
+        ])
+        && request.resource.data.fcmToken is string
+        && request.resource.data.fcmToken.size() > 0
+        && request.resource.data.fcmToken.size() <= 4096
+        && request.resource.data.userAgent is string
+        && request.resource.data.userAgent.size() <= 512;
+
+      allow update: if
+        deviceId != "anon"
+        && deviceId.size() > 0
+        && deviceId.size() <= 200
+        && request.resource.data.fcmToken is string
+        && request.resource.data.fcmToken.size() > 0
+        && request.resource.data.fcmToken.size() <= 4096
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(["fcmToken", "updatedAt", "userAgent"])
+        && (!("userAgent" in request.resource.data.diff(resource.data).affectedKeys())
+          || request.resource.data.userAgent is string)
+        && (!("userAgent" in request.resource.data)
+          || request.resource.data.userAgent.size() <= 512);
+
+      allow delete: if false;
+    }
+  }
+}

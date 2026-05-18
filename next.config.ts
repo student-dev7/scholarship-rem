@@ -9,6 +9,8 @@ const withPwa = withPWA({
   disable: process.env.NODE_ENV === "development",
   workboxOptions: {
     disableDevLogs: true,
+    // PWA の sw.js に FCM ハンドラを同梱（バックグラウンド通知用）
+    importScripts: ["/firebase-messaging-sw.js"],
   },
 });
 

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { getOrCreateDeviceId } from "@/hooks/useLocalData";
+import { isIos, isStandalonePwa } from "@/lib/fcmServiceWorker";
 import { Bell, X } from "lucide-react";
 import { LegalInlineBlock } from "@/components/Footer";
 
@@ -132,6 +133,8 @@ export default function NotificationSettingsPage() {
     }
   }, [fcmToken]);
 
+  const needsIosStandalone = isIos() && !isStandalonePwa();
+
   const permissionLabel =
     permission === "granted"
       ? "許可済み"
@@ -154,6 +157,11 @@ export default function NotificationSettingsPage() {
       </p>
 
       <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-4 shadow-sm text-sm text-gray-800">
+        {needsIosStandalone && (
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-amber-900">
+            iPhone ではホーム画面のアイコンから起動したうえで「通知を有効化」を押してください（Safari のタブのままでは届きません）。
+          </p>
+        )}
         <p>
           <span className="text-gray-500">通知の状態:</span> {permissionLabel}
         </p>
