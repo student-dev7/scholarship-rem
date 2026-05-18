@@ -37,17 +37,12 @@ function maskToken(t: string): string {
   return `${t.slice(0, 12)}…${t.slice(-8)}`;
 }
 
+/** data のみ送る（notification / webpush.notification があると FCM の自動表示 + SW で二重になる） */
 function buildWebPayload(title: string, body: string, link: string) {
   return {
-    notification: { title, body },
-    data: { link },
+    data: { title, body, link },
     webpush: {
       fcmOptions: { link },
-      notification: {
-        title,
-        body,
-        icon: "/icons/icon-192x192.png",
-      },
     },
   };
 }

@@ -13,13 +13,18 @@ loadFirebaseConfig()
     firebase.initializeApp(cfg);
     const messaging = firebase.messaging();
     messaging.onBackgroundMessage((payload) => {
-      const title = (payload.notification && payload.notification.title) || "奨学金リマインダー";
-      const options = {
-        body: (payload.notification && payload.notification.body) || "",
+      // notification 付きメッセージは FCM が自動表示するため showNotification しない（二重防止）
+      if (payload.notification) return;
+
+      const data = payload.data || {};
+      const title = data.title || "奨学金リマインダー";
+      const body = data.body || "";
+      return self.registration.showNotification(title, {
+        body,
         icon: "/icons/icon-192x192.png",
-        data: payload.data,
-      };
-      return self.registration.showNotification(title, options);
+        tag: "scholarship-reminder",
+        data: { link: data.link || "/" },
+      });
     });
   })
   .catch((e) => {
