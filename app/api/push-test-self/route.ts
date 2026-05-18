@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { broadcastPushToAllSubscribers } from "@/lib/broadcastPushStub";
-import { getFirebaseAdminDb } from "@/lib/firebaseAdmin";
+import { getFirebaseAdminDb, isFirebaseAdminConfigured } from "@/lib/firebaseAdmin";
 
 const USERS = "users";
 const TOKEN_FIELD = "fcmToken";
@@ -29,10 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
   }
 
-  if (
-    !process.env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 &&
-    !process.env.FIREBASE_SERVICE_ACCOUNT_JSON
-  ) {
+  if (!isFirebaseAdminConfigured()) {
     return NextResponse.json(
       {
         ok: false,

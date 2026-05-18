@@ -5,7 +5,7 @@ import {
   broadcastPushToTokenList,
 } from "@/lib/broadcastPushStub";
 import { fetchJassoSettingsAdmin } from "@/lib/firestoreSettingsServer";
-import { getFirebaseAdminDb } from "@/lib/firebaseAdmin";
+import { getFirebaseAdminDb, isFirebaseAdminConfigured } from "@/lib/firebaseAdmin";
 import { buildCronReminderBroadcasts } from "@/lib/reminderCronMessages";
 import { getTodayJstYmd } from "@/lib/jstDate";
 import { verifyAdminBearer } from "@/lib/verifyAdminBearer";
@@ -29,11 +29,8 @@ export async function GET(request: Request) {
     return unauthorized();
   }
 
-  if (
-    !process.env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 &&
-    !process.env.FIREBASE_SERVICE_ACCOUNT_JSON
-  ) {
-    console.error("[send-push cron] missing FIREBASE_SERVICE_ACCOUNT_JSON_*");
+  if (!isFirebaseAdminConfigured()) {
+    console.error("[send-push cron] missing FIREBASE_SERVICE_ACCOUNT_JSON");
     return NextResponse.json({ ok: false, error: "server_misconfigured" }, { status: 500 });
   }
 
@@ -44,7 +41,7 @@ export async function GET(request: Request) {
     settings = await fetchJassoSettingsAdmin();
   } catch (e) {
     console.error(
-      "[send-push cron] fetchJassoSettingsAdmin (or Firebase Admin init — check FIREBASE_SERVICE_ACCOUNT_JSON_*)",
+      "[send-push cron] fetchJassoSettingsAdmin (or Firebase Admin init — check FIREBASE_SERVICE_ACCOUNT_JSON)",
       e
     );
     return NextResponse.json({ ok: false, error: "settings_read_failed" }, { status: 500 });

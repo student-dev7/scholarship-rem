@@ -22,7 +22,7 @@ const END_PKCS8 = "-----END PRIVATE KEY-----";
  * マーカー間の Base64 だけ空白除去し、64 文字折り返しで標準 PEM に整える。
  */
 function normalizeFirebasePrivateKeyPem(raw: string): string {
-  let key = raw.replace(/\\n/g, "\n").trim().replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const key = raw.replace(/\\n/g, "\n").trim().replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 
   const pairs: { begin: string; end: string }[] = [
     { begin: BEGIN_PKCS8, end: END_PKCS8 },
@@ -44,26 +44,14 @@ function normalizeFirebasePrivateKeyPem(raw: string): string {
   return key;
 }
 
-function decodeServiceAccountUtf8(rawBase64: string | undefined, rawJson: string | undefined): string {
-  if (rawBase64) {
-    // 貼り付けで混ざる改行・空白は Base64 解読を壊す（JSON.parse が途中で切れた文字列になる）
-    const oneLine = rawBase64.replace(/\s+/g, "").trim();
-    return Buffer.from(oneLine, "base64").toString("utf8").replace(/^\uFEFF/, "").trim();
-  }
-  if (rawJson) {
-    return rawJson.replace(/^\uFEFF/, "").trim();
-  }
-  return "";
+export function isFirebaseAdminConfigured(): boolean {
+  return Boolean(process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim());
 }
 
 function parseServiceAccount(): ServiceAccountShape {
-  const rawBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64;
-  const rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-  const source = decodeServiceAccountUtf8(rawBase64, rawJson);
+  const source = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.replace(/^\uFEFF/, "").trim();
   if (!source) {
-    throw new Error(
-      "FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 or FIREBASE_SERVICE_ACCOUNT_JSON is required."
-    );
+    throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is required.");
   }
   let parsed: Partial<ServiceAccountShape>;
   try {
@@ -71,9 +59,8 @@ function parseServiceAccount(): ServiceAccountShape {
   } catch (e) {
     if (e instanceof SyntaxError) {
       throw new Error(
-        "Invalid JSON in FIREBASE_SERVICE_ACCOUNT_JSON or decoded FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 " +
-          "(truncation, unclosed private_key string, bad base64, or copy-paste cut off). " +
-          "Re-encode the full JSON file as one line of base64 with no line breaks in the env value. " +
+        "Invalid JSON in FIREBASE_SERVICE_ACCOUNT_JSON " +
+          "(truncation, unclosed private_key string, or copy-paste cut off). " +
           e.message
       );
     }

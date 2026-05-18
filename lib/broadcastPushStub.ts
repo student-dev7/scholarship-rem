@@ -1,4 +1,8 @@
-import { getFirebaseAdminDb, getFirebaseAdminMessaging } from "./firebaseAdmin";
+import {
+  getFirebaseAdminDb,
+  getFirebaseAdminMessaging,
+  isFirebaseAdminConfigured,
+} from "./firebaseAdmin";
 
 const USERS = "users";
 const TOKEN_FIELD = "fcmToken";
@@ -55,14 +59,13 @@ export async function broadcastPushToTokenList(
   input: BroadcastInput,
   tokens: string[]
 ): Promise<BroadcastResult> {
-  if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 && !process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+  if (!isFirebaseAdminConfigured()) {
     return {
       success: false,
       attempted: 0,
       sent: 0,
       failed: 0,
-      message:
-        "サーバー環境変数 FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 (または FIREBASE_SERVICE_ACCOUNT_JSON) が未設定です。",
+      message: "サーバー環境変数 FIREBASE_SERVICE_ACCOUNT_JSON が未設定です。",
     };
   }
 
@@ -134,14 +137,13 @@ export async function broadcastPushToAllSubscribers(
   input: BroadcastInput = {},
   options?: BroadcastOptions
 ): Promise<BroadcastResult> {
-  if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 && !process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+  if (!isFirebaseAdminConfigured()) {
     return {
       success: false,
       attempted: 0,
       sent: 0,
       failed: 0,
-      message:
-        "サーバー環境変数 FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 (または FIREBASE_SERVICE_ACCOUNT_JSON) が未設定です。",
+      message: "サーバー環境変数 FIREBASE_SERVICE_ACCOUNT_JSON が未設定です。",
     };
   }
 
