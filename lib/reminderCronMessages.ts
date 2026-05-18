@@ -2,7 +2,7 @@ import type { BroadcastInput } from "./broadcastPushStub";
 import type { JassoSettings } from "./jassoSettingsTypes";
 import { addCalendarDaysYmd, getTodayJstYmd } from "./jstDate";
 
-export type ReminderPhaseKind = "threeDaysBeforeStart" | "startDay" | "dayBeforeEnd";
+export type ReminderPhaseKind = "startDay" | "dayBeforeEnd";
 
 function slashYmd(ymd: string): string {
   const m = ymd.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -19,13 +19,6 @@ function buildPayloadForPhase(
 ): BroadcastInput {
   const startBr = slashYmd(startYmd);
   const endBr = slashYmd(endYmd);
-  if (phase === "threeDaysBeforeStart") {
-    return {
-      title: `${taskLabel}｜入力開始まであと3日`,
-      body: `入力期間は ${startBr} からです。大学の案内とスカラネットを確認してください。`,
-      link: "/",
-    };
-  }
   if (phase === "startDay") {
     return {
       title: `${taskLabel}｜入力期間が始まります`,
@@ -42,7 +35,7 @@ function buildPayloadForPhase(
   };
 }
 
-/** Cron: JST「今日」が開始3日前・開始当日・終了前日のいずれかに該当すれば送信 */
+/** Cron: JST「今日」が開始当日・終了前日のいずれかに該当すれば送信 */
 export function buildCronReminderBroadcasts(
   settings: JassoSettings,
   todayJstYmd: string
@@ -59,16 +52,8 @@ export function buildCronReminderBroadcasts(
     const startOk = Boolean(start && /^\d{4}-\d{2}-\d{2}$/.test(start));
     const endOk = Boolean(end && /^\d{4}-\d{2}-\d{2}$/.test(end));
 
-    if (startOk) {
-      const d3 = addCalendarDaysYmd(start, -3);
-      if (d3 && todayJstYmd === d3) {
-        payloads.push(
-          buildPayloadForPhase(label, "threeDaysBeforeStart", start, endOk ? end! : start, endOk)
-        );
-      }
-      if (todayJstYmd === start) {
-        payloads.push(buildPayloadForPhase(label, "startDay", start, endOk ? end! : start, endOk));
-      }
+    if (startOk && todayJstYmd === start) {
+      payloads.push(buildPayloadForPhase(label, "startDay", start, endOk ? end! : start, endOk));
     }
 
     if (endOk) {
@@ -89,7 +74,7 @@ function ymdToUtcNoonDate(ymd: string): Date {
 }
 
 /**
- * ダッシュボード用: 開始3日前・開始日・終了前日（offset 日だけ期間を前にずらして表示）
+ * ダッシュボード用: 開始当日・終了前日（offset 日だけ期間を前にずらして表示）
  */
 export function getThreePhaseReminderScaffold(
   settings: JassoSettings,
@@ -105,9 +90,8 @@ export function getThreePhaseReminderScaffold(
   ];
 
   const slots: { phase: ReminderPhaseKind; suffix: string }[] = [
-    { phase: "threeDaysBeforeStart", suffix: "開始の3日前" },
     { phase: "startDay", suffix: "開始当日" },
-    { phase: "dayBeforeEnd", suffix: "終了の前日" },
+    { phase: "dayBeforeEnd", suffix: "終了前日" },
   ];
 
   for (const ev of events) {
@@ -132,9 +116,7 @@ export function getThreePhaseReminderScaffold(
 
     for (const slot of slots) {
       let ymd: string | null = null;
-      if (slot.phase === "threeDaysBeforeStart" && esOk) {
-        ymd = addCalendarDaysYmd(effectiveStart, -3);
-      } else if (slot.phase === "startDay" && esOk) {
+      if (slot.phase === "startDay" && esOk) {
         ymd = effectiveStart;
       } else if (slot.phase === "dayBeforeEnd" && eeOk) {
         ymd = addCalendarDaysYmd(effectiveEnd, -1);

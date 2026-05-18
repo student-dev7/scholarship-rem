@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "postinstall": "node scripts/generate-pwa-icons.mjs",
+    "icons:apply": "node scripts/generate-pwa-icons.mjs --force",
     "monitor": "node scripts/monitor.js"
   },
   "dependencies": {
@@ -29,6 +30,7 @@
     "cheerio": "^1.0.0",
     "eslint": "^9.24.0",
     "eslint-config-next": "15.3.8",
+    "sharp": "^0.34.1",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3"
   }

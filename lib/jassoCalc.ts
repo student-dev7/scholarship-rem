@@ -1,6 +1,6 @@
 /** 第二種: 目安年率。上限3.0%（表示用注記） */
 export const JASSO_SETTINGS = {
-  RATES: { FIXED: 0.02423, FLOATING: 0.016 },
+  RATES: { FIXED: 0.02722, FLOATING: 0.01874 },
   RATE_CAP: 0.03,
   /** 第一種 月額の参考レンジ（円） */
   TYPE1_MONTHLY_MIN: 20_000,

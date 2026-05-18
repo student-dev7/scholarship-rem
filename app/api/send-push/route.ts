@@ -20,7 +20,7 @@ function unauthorized(): NextResponse {
 }
 
 /**
- * Vercel Cron — JST で「開始3日前・開始当日・終了前日」に該当すれば自動送信。
+ * Vercel Cron — JST で「開始当日・終了前日」に該当すれば自動送信。
  * Authorization: Bearer {ADMIN_API_SECRET}。
  */
 export async function GET(request: Request) {

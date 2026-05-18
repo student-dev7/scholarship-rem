@@ -46,6 +46,9 @@ export default function Home() {
         本サイトは独立行政法人日本学生支援機構（JASSO）・スカラネット公式とは無関係の非公式の個人サイトです。案内は必ず大学や公式サイトで確認してください。
       </p>
       <h1 className="text-lg font-semibold text-gray-800">ダッシュボード</h1>
+      <p className="text-sm text-gray-600">
+        本サイトをホーム画面に追加し、通知を許可してください。
+      </p>
       <div className="flex flex-col gap-2">
         <Link href="/notification-settings" className={primaryRowBtn}>
           通知を設定する
@@ -108,9 +111,9 @@ export default function Home() {
       </section>
 
       <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-        <h2 className="mb-2 text-sm font-medium text-gray-800">お知らせが届く日（3回）</h2>
+        <h2 className="mb-2 text-sm font-medium text-gray-800">お知らせが届く日（2回）</h2>
         <p className="mb-2 text-xs text-gray-600">
-          それぞれ「入力開始の3日前」「入力が始まる日」「締切の前日」のタイミングです（日本時間）。
+          「入力が始まる日（当日）」と「締切の前日」のタイミングです（日本時間）。
         </p>
         <ul className="max-h-56 space-y-1.5 overflow-y-auto text-sm">
           {reminders.length === 0 && (

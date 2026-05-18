@@ -1,6 +1,6 @@
 import type { JassoSettings } from "./jassoSettingsTypes";
 
-/** ダッシュボード用（自動通知と同じ「開始3日前・開始日・終了前日」／設定の前倒し日数を反映） */
+/** ダッシュボード用（自動通知と同じ「開始当日・終了前日」／設定の前倒し日数を反映） */
 export { getThreePhaseReminderScaffold as getPendingReminderScaffold } from "./reminderCronMessages";
 
 /**

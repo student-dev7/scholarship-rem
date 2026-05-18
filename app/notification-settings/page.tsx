@@ -153,7 +153,7 @@ export default function NotificationSettingsPage() {
         通知設定
       </h1>
       <p className="text-sm text-gray-600">
-        許可していただくと、このアプリから期限のお知らせが届きます。内容は入力期限のリマインダーです。
+        ホーム画面に追加+通知を許可でこのアプリから期限のお知らせが届きます。内容は入力期限のリマインダーです。
       </p>
 
       <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-4 shadow-sm text-sm text-gray-800">
