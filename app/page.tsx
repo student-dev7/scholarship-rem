@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useJassoSettings } from "@/hooks/useJassoSettings";
-import { useLocalData } from "@/hooks/useLocalData";
 import {
   buildReminderWindowSummary,
   getPendingReminderScaffold,
@@ -29,21 +28,20 @@ const primaryRowBtn =
 
 export default function Home() {
   const { settings, loading, error } = useJassoSettings();
-  const { offsetDays } = useLocalData();
 
   const windows = useMemo(
     () => buildReminderWindowSummary(settings),
     [settings]
   );
   const reminders = useMemo(
-    () => getPendingReminderScaffold(settings, new Date(), offsetDays),
-    [settings, offsetDays]
+    () => getPendingReminderScaffold(settings, new Date(), 0),
+    [settings]
   );
   const scholarNetLoginUrl = "https://scholar-ps.sas.jasso.go.jp/mypage/login_open.do";
   return (
     <div className="mx-auto w-full max-w-md space-y-4">
       <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-950">
-        本サイトは独立行政法人日本学生支援機構（JASSO）・スカラネット公式とは無関係の非公式の個人サイトです。案内は必ず大学や公式サイトで確認してください。
+        当サイトは、独立行政法人日本学生支援機構（JASSO）およびスカラネット公式とは無関係の個人サイトです。手続きの期限は大学によって異なる場合があります。正確な情報は、必ずご自身の大学や公式サイトの案内をご確認ください。
       </p>
       <h1 className="text-lg font-semibold text-gray-800">ダッシュボード</h1>
       <p className="text-sm text-gray-600">
@@ -100,13 +98,6 @@ export default function Home() {
               );
             })}
           </ul>
-        )}
-        {offsetDays !== 0 && (
-          <p className="mt-2 text-xs text-gray-500">
-            {offsetDays > 0
-              ? `設定により、表示とお知らせの目安を ${offsetDays} 日分、手前にずらしています。`
-              : `設定により、表示とお知らせの目安を ${-offsetDays} 日分、後ろにずらしています。`}
-          </p>
         )}
       </section>
 
