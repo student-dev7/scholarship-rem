@@ -1,6 +1,6 @@
 {
   "name": "奨学金リマインダー",
-  "short_name": "奨学金",
+  "short_name": "奨学金通知",
   "description": "JASSO 締切のリマインダー",
   "start_url": "/",
   "display": "standalone",

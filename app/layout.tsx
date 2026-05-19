@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "奨学金リマインダー",
+    title: "奨学金通知",
   },
   formatDetection: {
     telephone: false,
