@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useJassoSettings } from "@/hooks/useJassoSettings";
 import {
   buildReminderWindowSummary,
   getPendingReminderScaffold,
 } from "@/lib/jassoReminders";
-import { ArrowUpRight, Calendar, Info } from "lucide-react";
+import { ArrowUpRight, Calendar, Info, Share2 } from "lucide-react";
 
 /** YYYY-MM-DD → 2026/4/14（先頭ゼロなし） */
 function toSlashYmd(ymd: string): string {
@@ -28,6 +28,24 @@ const primaryRowBtn =
 
 export default function Home() {
   const { settings, loading, error } = useJassoSettings();
+  const [canShare, setCanShare] = useState(false);
+
+  useEffect(() => {
+    setCanShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
+  }, []);
+
+  const shareSite = useCallback(async () => {
+    if (!navigator.share) return;
+    try {
+      await navigator.share({
+        title: "奨学金リマインダー",
+        text: "JASSO 在学届・継続願の期限を思い出す補助アプリ",
+        url: window.location.href,
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return;
+    }
+  }, []);
 
   const windows = useMemo(
     () => buildReminderWindowSummary(settings),
@@ -43,7 +61,20 @@ export default function Home() {
       <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-950">
         当サイトは、独立行政法人日本学生支援機構（JASSO）およびスカラネット公式とは無関係の個人サイトです。手続きの期限は大学によって異なる場合があります。正確な情報は、必ずご自身の大学や公式サイトの案内をご確認ください。
       </p>
-      <h1 className="text-lg font-semibold text-gray-800">ダッシュボード</h1>
+      <div className="flex items-start justify-between gap-2">
+        <h1 className="text-lg font-semibold text-gray-800">ダッシュボード</h1>
+        {canShare ? (
+          <button
+            type="button"
+            onClick={() => void shareSite()}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
+            aria-label="このサイトを共有"
+          >
+            <Share2 className="h-3.5 w-3.5" aria-hidden />
+            共有
+          </button>
+        ) : null}
+      </div>
       <p className="text-sm text-gray-600">
         本サイトをホーム画面に追加し、通知を許可してください。
       </p>
