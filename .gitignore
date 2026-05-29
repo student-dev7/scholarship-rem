@@ -33,6 +33,7 @@ yarn-error.log*
 # ローカル監視スナップ（CI は cache を使用）
 last_news.txt
 vercel-firebase-b64-oneline.txt
+firebase-service-account.json
 
 # PWA ビルドで生成（@ducanh2912/next-pwa / 本番は deploy 時に再生成）
 public/sw.js
