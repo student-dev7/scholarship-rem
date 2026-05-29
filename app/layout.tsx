@@ -11,9 +11,6 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "奨学金リマインダー",
   description: "JASSO 在籍報告・継続願の期限を思い出す補助アプリ",
-  verification: {
-    google: "google3c6c14d439cc1747",
-  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -42,6 +39,10 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
+        <meta
+          name="google-site-verification"
+          content="h7V3_l6etGHSkZPAmd4jHy58A-hSqLQa1QywXSLMOng"
+        />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body
