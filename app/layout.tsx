@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { AppShell } from "@/components/AppShell";
+import { FirebaseAnalytics } from "@/components/FirebaseAnalytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,6 +51,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistSans.className} antialiased`}
       >
         <AppShell>{children}</AppShell>
+        <FirebaseAnalytics />
+        <Analytics />
       </body>
     </html>
   );

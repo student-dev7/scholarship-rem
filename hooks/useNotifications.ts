@@ -144,7 +144,6 @@ export function useNotifications() {
             payload.data?.title ?? payload.notification?.title ?? "奨学金リマインダー";
           const b = payload.data?.body ?? payload.notification?.body ?? "";
           if (t || b) {
-            // eslint-disable-next-line no-new
             new Notification(t || "通知", {
               body: b,
               icon: "/icons/icon-192x192.png",

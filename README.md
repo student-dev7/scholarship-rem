@@ -82,6 +82,12 @@ npm run icons:apply
 
 自動リマインダーは Vercel Cron（`vercel.json`: 毎日 15:00 UTC ≒ JST 0:00）が `/api/send-push` を呼び、**開始当日**と**終了前日**に該当する場合のみ送信します。
 
+## アクセス解析（Vercel + Firebase）
+
+- Vercel Analytics は `@vercel/analytics` を導入済みです。
+- Firebase で見る場合は、`.env.local` / Vercel 環境変数に `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` を設定してください。
+- 設定後、Firebase Console の **Analytics > Realtime** で訪問状況を確認できます（反映まで数分かかることがあります）。
+
 ## スクリプト
 
 | コマンド | 説明 |

@@ -20,7 +20,7 @@ function getBaseUrl(): string {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  return "http://localhost:3000";
+  return "https://scholarship-rem.vercel.app";
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
