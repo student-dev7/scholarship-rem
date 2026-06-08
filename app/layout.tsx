@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { AppShell } from "@/components/AppShell";
@@ -51,7 +52,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistSans.className} antialiased`}
       >
         <AppShell>{children}</AppShell>
-        <FirebaseAnalytics />
+        <Suspense fallback={null}>
+          <FirebaseAnalytics />
+        </Suspense>
         <Analytics />
       </body>
     </html>
