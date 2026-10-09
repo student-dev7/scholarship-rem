@@ -82,6 +82,30 @@ npm run icons:apply
 
 自動リマインダーは Vercel Cron（`vercel.json`: 毎日 15:00 UTC ≒ JST 0:00）が `/api/send-push` を呼び、**開始当日**と**終了前日**に該当する場合のみ送信します。
 
+### @JASSO_general の X 告知を即時プッシュ（Gmail 監視）
+
+JASSO 公式 X のメール通知を Google Apps Script で監視し、条件一致時に `POST /api/send-push` で全登録端末へ送ります。アプリ側のコード変更は不要です。
+
+| 検知パターン | 条件 |
+|--------------|------|
+| 在籍報告開始 | `#在籍報告` かつ `開始` |
+| 継続願入力 | `#奨学金継続願` かつ `入力する必要があります` |
+
+**初回セットアップ**
+
+1. 専用 X アカウントで `@JASSO_general` のみフォローし、メール通知を ON
+2. そのメールを受け取る専用 Gmail を用意
+3. [script.google.com](https://script.google.com) で新規プロジェクトを作成（専用 Gmail でログイン）
+4. `scripts/jasso-gmail-monitor.gs` の内容を貼り付け
+5. プロジェクト設定 → **スクリプト プロパティ** に `ADMIN_API_SECRET`（Vercel と同じ値）を設定
+6. エディタで `setupTrigger` を1回実行 → **5分おき**に `checkJasso` が動く
+7. 各ユーザーの端末で通知設定（`/notification-settings`）から「通知を有効化」（FCM トークン登録）
+
+**動作確認**
+
+- `dryRunCheckJasso` … 未読 X メールがパターンに一致するかログのみ確認
+- `checkJasso` … 手動実行で実際に send-push を叩く
+
 ## アクセス解析（Vercel + Firebase）
 
 - Vercel Analytics は `@vercel/analytics` を導入済みです。
@@ -102,6 +126,8 @@ npm run icons:apply
 ## ディレクトリ構成（抜粋）
 
 ```
+scripts/
+  jasso-gmail-monitor.gs  # @JASSO_general X メール監視（Google Apps Script に貼り付け）
 app/                    # ページ・API Routes
   api/                  # send-push, push-test-self, firebase-public-config
   notification-settings/

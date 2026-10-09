@@ -30,6 +30,82 @@ const currentYm: YearMonth = { year: now.getFullYear(), month: now.getMonth() + 
 const YEAR_OPTIONS = Array.from({ length: 21 }, (_, i) => currentYm.year - 10 + i);
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 
+type PeriodRangeSelectProps = {
+  start: YearMonth;
+  end: YearMonth;
+  idPrefix: string;
+  onStartChange: (next: YearMonth) => void;
+  onEndChange: (next: YearMonth) => void;
+};
+
+function PeriodRangeSelect({
+  start,
+  end,
+  idPrefix,
+  onStartChange,
+  onEndChange,
+}: PeriodRangeSelectProps) {
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+      <div className="inline-flex items-center gap-1">
+        <select
+          className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+          value={start.year}
+          onChange={(e) => onStartChange({ ...start, year: Number(e.target.value) })}
+          aria-label="開始年"
+        >
+          {YEAR_OPTIONS.map((y) => (
+            <option key={`${idPrefix}-sy-${y}`} value={y}>
+              {y}年
+            </option>
+          ))}
+        </select>
+        <select
+          className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+          value={start.month}
+          onChange={(e) => onStartChange({ ...start, month: Number(e.target.value) })}
+          aria-label="開始月"
+        >
+          {MONTH_OPTIONS.map((m) => (
+            <option key={`${idPrefix}-sm-${m}`} value={m}>
+              {m}月
+            </option>
+          ))}
+        </select>
+      </div>
+      <span className="shrink-0 text-gray-400" aria-hidden>
+        →
+      </span>
+      <div className="inline-flex items-center gap-1">
+        <select
+          className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+          value={end.year}
+          onChange={(e) => onEndChange({ ...end, year: Number(e.target.value) })}
+          aria-label="終了年"
+        >
+          {YEAR_OPTIONS.map((y) => (
+            <option key={`${idPrefix}-ey-${y}`} value={y}>
+              {y}年
+            </option>
+          ))}
+        </select>
+        <select
+          className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+          value={end.month}
+          onChange={(e) => onEndChange({ ...end, month: Number(e.target.value) })}
+          aria-label="終了月"
+        >
+          {MONTH_OPTIONS.map((m) => (
+            <option key={`${idPrefix}-em-${m}`} value={m}>
+              {m}月
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
@@ -225,8 +301,7 @@ export default function SimulatorPage() {
       <div>
         <h1 className="text-lg font-semibold text-gray-900">奨学金 返済シミュ</h1>
         <p className="mt-1 text-xs leading-relaxed text-gray-500">
-          第一種（無利子）の貸与額と、第二種（有利子）の目安利率で月々の返済を試算します。貸与総額に応じ
-          て返済回数は 108 回（9年）／156回／180回／240回（20年）に区分されます（JASSOの審定に従います）。
+          第一種（無利子）の貸与額と、第二種（有利子）の目安利率で月々の返済を試算します。貸与総額に応じて返済回数は108回（9年）／156回／180回／240回（20年）に区分されます（JASSOの審定に従います）。
         </p>
       </div>
 
@@ -240,12 +315,12 @@ export default function SimulatorPage() {
           {t1Histories.map((h, i) => {
             const months = getMonths(h.start, h.end);
             return (
-              <div key={h.id} className="rounded-xl border border-emerald-200/80 bg-white/70 p-3">
+              <div key={h.id} className="rounded-xl bg-white/60 p-3">
                 <p className="mb-2 text-xs font-medium text-emerald-900">履歴 {i + 1}</p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <label className="text-xs text-gray-600">
+                <div className="space-y-3">
+                  <label className="block text-xs text-gray-600">
                     月額（万円）
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex min-w-0 items-center gap-2">
                       <input
                         type="range"
                         min={0}
@@ -257,109 +332,36 @@ export default function SimulatorPage() {
                             monthlyAmount: Math.max(0, Number(e.target.value) || 0),
                           })
                         }
-                        className="w-full accent-emerald-600"
+                        className="min-w-0 flex-1 accent-emerald-600"
                       />
-                      <input
-                        type="number"
-                        min={0}
-                        step={0.1}
-                        value={h.monthlyAmount}
-                        onChange={(e) =>
-                          updateHistory(setT1Histories, h.id, {
-                            monthlyAmount: Math.max(0, Number(e.target.value) || 0),
-                          })
-                        }
-                        className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                      />
-                      <span className="text-xs text-gray-500">万円</span>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <input
+                          type="number"
+                          min={0}
+                          step={0.1}
+                          value={h.monthlyAmount}
+                          onChange={(e) =>
+                            updateHistory(setT1Histories, h.id, {
+                              monthlyAmount: Math.max(0, Number(e.target.value) || 0),
+                            })
+                          }
+                          className="w-[4.5rem] rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+                        />
+                        <span className="whitespace-nowrap text-xs text-gray-500">万円</span>
+                      </div>
                     </div>
                   </label>
                   <div className="text-xs text-gray-600">
                     期間
-                    <div className="mt-1 grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <p>開始</p>
-                        <div className="flex flex-wrap gap-2">
-                          <div className="inline-flex items-center gap-1">
-                            <select
-                              className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                              value={h.start.year}
-                              onChange={(e) =>
-                                updateHistory(setT1Histories, h.id, {
-                                  start: { ...h.start, year: Number(e.target.value) },
-                                })
-                              }
-                            >
-                              {YEAR_OPTIONS.map((y) => (
-                                <option key={`t1-sy-${h.id}-${y}`} value={y}>
-                                  {y}
-                                </option>
-                              ))}
-                            </select>
-                            <span className="text-xs text-gray-500">年</span>
-                          </div>
-                          <div className="inline-flex items-center gap-1">
-                            <select
-                              className="w-20 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                              value={h.start.month}
-                              onChange={(e) =>
-                                updateHistory(setT1Histories, h.id, {
-                                  start: { ...h.start, month: Number(e.target.value) },
-                                })
-                              }
-                            >
-                              {MONTH_OPTIONS.map((m) => (
-                                <option key={`t1-sm-${h.id}-${m}`} value={m}>
-                                  {m}
-                                </option>
-                              ))}
-                            </select>
-                            <span className="text-xs text-gray-500">月</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <p>終了</p>
-                        <div className="flex flex-wrap gap-2">
-                          <div className="inline-flex items-center gap-1">
-                            <select
-                              className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                              value={h.end.year}
-                              onChange={(e) =>
-                                updateHistory(setT1Histories, h.id, {
-                                  end: { ...h.end, year: Number(e.target.value) },
-                                })
-                              }
-                            >
-                              {YEAR_OPTIONS.map((y) => (
-                                <option key={`t1-ey-${h.id}-${y}`} value={y}>
-                                  {y}
-                                </option>
-                              ))}
-                            </select>
-                            <span className="text-xs text-gray-500">年</span>
-                          </div>
-                          <div className="inline-flex items-center gap-1">
-                            <select
-                              className="w-20 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                              value={h.end.month}
-                              onChange={(e) =>
-                                updateHistory(setT1Histories, h.id, {
-                                  end: { ...h.end, month: Number(e.target.value) },
-                                })
-                              }
-                            >
-                              {MONTH_OPTIONS.map((m) => (
-                                <option key={`t1-em-${h.id}-${m}`} value={m}>
-                                  {m}
-                                </option>
-                              ))}
-                            </select>
-                            <span className="text-xs text-gray-500">月</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <PeriodRangeSelect
+                      idPrefix={`t1-${h.id}`}
+                      start={h.start}
+                      end={h.end}
+                      onStartChange={(start) =>
+                        updateHistory(setT1Histories, h.id, { start })
+                      }
+                      onEndChange={(end) => updateHistory(setT1Histories, h.id, { end })}
+                    />
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
@@ -388,9 +390,9 @@ export default function SimulatorPage() {
             </button>
           </div>
         </div>
-        <p className="mt-3 text-sm text-gray-800">
-          貸与合計:{" "}
-          <span className="font-semibold tabular-nums">
+        <p className="mt-3 text-sm text-gray-700">
+          小計:{" "}
+          <span className="font-semibold tabular-nums text-emerald-900">
             {t1Total.toLocaleString("ja-JP")} 円
           </span>
           <span className="text-gray-500">（{t1Months} ヶ月分）</span>
@@ -407,12 +409,12 @@ export default function SimulatorPage() {
           {t2Histories.map((h, i) => {
             const months = getMonths(h.start, h.end);
             return (
-              <div key={h.id} className="rounded-xl border border-sky-200/80 bg-white/70 p-3">
+              <div key={h.id} className="rounded-xl bg-white/60 p-3">
                 <p className="mb-2 text-xs font-medium text-sky-900">履歴 {i + 1}</p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <label className="text-xs text-gray-600">
+                <div className="space-y-3">
+                  <label className="block text-xs text-gray-600">
                     月額（万円）
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex min-w-0 items-center gap-2">
                       <input
                         type="range"
                         min={0}
@@ -424,109 +426,36 @@ export default function SimulatorPage() {
                             monthlyAmount: Math.max(0, Number(e.target.value) || 0),
                           })
                         }
-                        className="w-full accent-sky-600"
+                        className="min-w-0 flex-1 accent-sky-600"
                       />
-                      <input
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={h.monthlyAmount}
-                        onChange={(e) =>
-                          updateHistory(setT2Histories, h.id, {
-                            monthlyAmount: Math.max(0, Number(e.target.value) || 0),
-                          })
-                        }
-                        className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                      />
-                      <span className="text-xs text-gray-500">万円</span>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <input
+                          type="number"
+                          min={0}
+                          step={1}
+                          value={h.monthlyAmount}
+                          onChange={(e) =>
+                            updateHistory(setT2Histories, h.id, {
+                              monthlyAmount: Math.max(0, Number(e.target.value) || 0),
+                            })
+                          }
+                          className="w-[4.5rem] rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+                        />
+                        <span className="whitespace-nowrap text-xs text-gray-500">万円</span>
+                      </div>
                     </div>
                   </label>
                   <div className="text-xs text-gray-600">
                     期間
-                    <div className="mt-1 grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <p>開始</p>
-                        <div className="flex flex-wrap gap-2">
-                          <div className="inline-flex items-center gap-1">
-                            <select
-                              className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                              value={h.start.year}
-                              onChange={(e) =>
-                                updateHistory(setT2Histories, h.id, {
-                                  start: { ...h.start, year: Number(e.target.value) },
-                                })
-                              }
-                            >
-                              {YEAR_OPTIONS.map((y) => (
-                                <option key={`t2-sy-${h.id}-${y}`} value={y}>
-                                  {y}
-                                </option>
-                              ))}
-                            </select>
-                            <span className="text-xs text-gray-500">年</span>
-                          </div>
-                          <div className="inline-flex items-center gap-1">
-                            <select
-                              className="w-20 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                              value={h.start.month}
-                              onChange={(e) =>
-                                updateHistory(setT2Histories, h.id, {
-                                  start: { ...h.start, month: Number(e.target.value) },
-                                })
-                              }
-                            >
-                              {MONTH_OPTIONS.map((m) => (
-                                <option key={`t2-sm-${h.id}-${m}`} value={m}>
-                                  {m}
-                                </option>
-                              ))}
-                            </select>
-                            <span className="text-xs text-gray-500">月</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <p>終了</p>
-                        <div className="flex flex-wrap gap-2">
-                          <div className="inline-flex items-center gap-1">
-                            <select
-                              className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                              value={h.end.year}
-                              onChange={(e) =>
-                                updateHistory(setT2Histories, h.id, {
-                                  end: { ...h.end, year: Number(e.target.value) },
-                                })
-                              }
-                            >
-                              {YEAR_OPTIONS.map((y) => (
-                                <option key={`t2-ey-${h.id}-${y}`} value={y}>
-                                  {y}
-                                </option>
-                              ))}
-                            </select>
-                            <span className="text-xs text-gray-500">年</span>
-                          </div>
-                          <div className="inline-flex items-center gap-1">
-                            <select
-                              className="w-20 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
-                              value={h.end.month}
-                              onChange={(e) =>
-                                updateHistory(setT2Histories, h.id, {
-                                  end: { ...h.end, month: Number(e.target.value) },
-                                })
-                              }
-                            >
-                              {MONTH_OPTIONS.map((m) => (
-                                <option key={`t2-em-${h.id}-${m}`} value={m}>
-                                  {m}
-                                </option>
-                              ))}
-                            </select>
-                            <span className="text-xs text-gray-500">月</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <PeriodRangeSelect
+                      idPrefix={`t2-${h.id}`}
+                      start={h.start}
+                      end={h.end}
+                      onStartChange={(start) =>
+                        updateHistory(setT2Histories, h.id, { start })
+                      }
+                      onEndChange={(end) => updateHistory(setT2Histories, h.id, { end })}
+                    />
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
@@ -555,9 +484,9 @@ export default function SimulatorPage() {
             </button>
           </div>
         </div>
-        <p className="text-sm text-gray-800">
-          貸与合計:{" "}
-          <span className="font-semibold tabular-nums">
+        <p className="text-sm text-gray-700">
+          小計:{" "}
+          <span className="font-semibold tabular-nums text-sky-900">
             {t2Total.toLocaleString("ja-JP")} 円
           </span>
         </p>
@@ -633,25 +562,30 @@ export default function SimulatorPage() {
 
       {/* メインの結果 */}
       <section className="rounded-2xl border-2 border-gray-200 bg-gradient-to-b from-white to-gray-50/80 p-5 shadow-md">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-          合計（第一種＋第二種）月々の返済額
-        </p>
+        <p className="text-xs font-medium text-gray-500">貸与合計（第一種＋第二種）</p>
         <p
           className="mt-1 break-all text-4xl font-extrabold tabular-nums text-gray-900"
           style={{ fontFeatureSettings: '"tnum"' }}
         >
-          {combinedMonthly.toLocaleString("ja-JP")}
+          {grandTotal.toLocaleString("ja-JP")}
           <span className="ml-1 text-2xl font-bold">円</span>
+        </p>
+        <p className="mt-1 text-xs text-gray-500">
+          第一種 {t1Total.toLocaleString("ja-JP")} 円 ＋ 第二種{" "}
+          {t2Total.toLocaleString("ja-JP")} 円
+        </p>
+        <div className="my-4 border-t border-gray-100" />
+        <p className="text-xs font-medium text-gray-500">月々の返済目安</p>
+        <p
+          className="mt-1 break-all text-3xl font-bold tabular-nums text-gray-900"
+          style={{ fontFeatureSettings: '"tnum"' }}
+        >
+          {combinedMonthly.toLocaleString("ja-JP")}
+          <span className="ml-1 text-xl font-bold">円</span>
         </p>
         <p className="mt-1 text-sm text-gray-500">
           第一種: {r1.monthly.toLocaleString("ja-JP")} 円 ＋ 第二種（
           {rateMode === "fixed" ? "固定" : "見直し"}）: {r2Active.monthly.toLocaleString("ja-JP")} 円
-        </p>
-        <p className="mt-3 text-sm text-gray-700">
-          借入合計:{" "}
-          <span className="font-semibold tabular-nums">
-            {grandTotal.toLocaleString("ja-JP")} 円
-          </span>
         </p>
         {laterEndAge != null && (
           <p className="mt-2 text-sm text-sky-800">

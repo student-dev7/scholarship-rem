@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useJassoSettings } from "@/hooks/useJassoSettings";
 import {
-  buildReminderWindowSummary,
-  getPendingReminderScaffold,
+  buildTaskScheduleRows,
+  getNextDeadlineHighlight,
+  type TaskScheduleStatus,
 } from "@/lib/jassoReminders";
-import { ArrowUpRight, Calendar, Info, Share2 } from "lucide-react";
+import { ArrowUpRight, Share2 } from "lucide-react";
 
 /** YYYY-MM-DD → 2026/4/14（先頭ゼロなし） */
 function toSlashYmd(ymd: string): string {
@@ -19,16 +20,31 @@ function toSlashYmd(ymd: string): string {
   return ymd;
 }
 
-function fmtDate(d: Date) {
-  return d.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
+function fmtNotifyYmd(ymd: string | null): string {
+  if (!ymd) return "—";
+  return toSlashYmd(ymd);
 }
 
-const primaryRowBtn =
-  "flex w-full items-center justify-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-3 text-sm font-medium text-blue-900 transition hover:bg-blue-100";
+const statusBadge: Record<
+  TaskScheduleStatus,
+  { label: string; className: string }
+> = {
+  past: { label: "終了", className: "bg-gray-100 text-gray-500" },
+  active: { label: "受付中", className: "bg-blue-100 text-blue-800" },
+  upcoming: { label: "開始前", className: "bg-amber-100 text-amber-900" },
+  unset: { label: "未設定", className: "bg-gray-50 text-gray-400" },
+};
+
+const primaryBtn =
+  "flex w-full items-center justify-center gap-1 rounded-lg bg-blue-600 px-3 py-3 text-sm font-semibold text-white transition hover:bg-blue-700";
+
+const outlineBtn =
+  "flex w-full items-center justify-center gap-1 rounded-lg border border-blue-300 bg-white px-3 py-3 text-sm font-medium text-blue-800 transition hover:bg-blue-50";
 
 export default function Home() {
   const { settings, loading, error } = useJassoSettings();
   const [canShare, setCanShare] = useState(false);
+  const now = useMemo(() => new Date(), []);
 
   useEffect(() => {
     setCanShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
@@ -47,20 +63,45 @@ export default function Home() {
     }
   }, []);
 
-  const windows = useMemo(
-    () => buildReminderWindowSummary(settings),
-    [settings]
+  const scheduleRows = useMemo(
+    () => buildTaskScheduleRows(settings, now),
+    [settings, now]
   );
-  const reminders = useMemo(
-    () => getPendingReminderScaffold(settings, new Date(), 0),
-    [settings]
+  const nextDeadline = useMemo(
+    () => getNextDeadlineHighlight(settings, now),
+    [settings, now]
   );
+
   const scholarNetLoginUrl = "https://scholar-ps.sas.jasso.go.jp/mypage/login_open.do";
+
   return (
     <div className="mx-auto w-full max-w-md space-y-4">
-      <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-950">
-        当サイトは、独立行政法人日本学生支援機構（JASSO）およびスカラネット公式とは無関係の個人サイトです。手続きの期限は大学によって異なる場合があります。正確な情報は、必ずご自身の大学や公式サイトの案内をご確認ください。
+      <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-snug text-amber-950">
+        個人運営サイトです（JASSO・スカラネット公式とは無関係）。
+        <Link href="#disclaimer" className="ml-1 font-medium text-amber-900 underline">
+          免責の全文
+        </Link>
       </p>
+
+      {!loading && (
+        <section className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 shadow-sm">
+          {"kind" in nextDeadline ? (
+            <p className="text-sm text-gray-600">{nextDeadline.message}</p>
+          ) : (
+            <>
+              <p className="text-sm font-medium text-blue-900">{nextDeadline.headline}</p>
+              <p className="mt-1 flex items-baseline gap-1 tabular-nums">
+                <span className="text-5xl font-extrabold tracking-tight text-gray-900">
+                  {nextDeadline.daysRemaining}
+                </span>
+                <span className="text-xl font-bold text-gray-700">日</span>
+              </p>
+              <p className="mt-1 text-xs text-gray-600">{nextDeadline.subline}</p>
+            </>
+          )}
+        </section>
+      )}
+
       <div className="flex items-start justify-between gap-2">
         <h1 className="text-lg font-semibold text-gray-800">ダッシュボード</h1>
         {canShare ? (
@@ -75,87 +116,90 @@ export default function Home() {
           </button>
         ) : null}
       </div>
+
       <p className="text-sm text-gray-600">
         本サイトをホーム画面に追加し、通知を許可してください。
       </p>
       <div className="flex flex-col gap-2">
-        <Link href="/notification-settings" className={primaryRowBtn}>
+        <Link href="/notification-settings" className={primaryBtn}>
           通知を設定する
         </Link>
         <a
           href={scholarNetLoginUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className={primaryRowBtn}
+          className={outlineBtn}
         >
           スカラネット・パーソナルにログイン
           <ArrowUpRight className="h-4 w-4 shrink-0" />
         </a>
       </div>
+
       {error && (
-        <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-sm text-amber-900">
-          <Info className="mt-0.5 h-4 w-4 shrink-0" />
+        <p className="rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-sm text-amber-900">
           {error}
         </p>
       )}
 
       <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-        <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-800">
-          <Calendar className="h-4 w-4 text-blue-500" />
-          入力期間（参考）
-        </h2>
+        <h2 className="mb-3 text-sm font-medium text-gray-800">手続きスケジュール</h2>
         {loading ? (
           <p className="text-sm text-gray-500">読み込み中…</p>
         ) : (
-          <ul className="space-y-2 text-sm text-gray-800">
-            {windows.map((w) => {
-              const isContinue = w.title.startsWith("継続願");
-              const hasRange = Boolean(w.from && w.to);
-              const line = (() => {
-                if (hasRange) {
-                  const r = `${toSlashYmd(w.from)}~${toSlashYmd(w.to)}`;
-                  return isContinue ? `${r}程度（未定）` : r;
+          <ul className="space-y-3">
+            {scheduleRows.map((row) => {
+              const badge = statusBadge[row.status];
+              const periodLine = (() => {
+                if (row.from && row.to) {
+                  return `${toSlashYmd(row.from)}〜${toSlashYmd(row.to)}`;
                 }
-                return isContinue ? "—（未定）" : "未設定";
+                if (row.from) return `${toSlashYmd(row.from)}〜（終了日未設定）`;
+                if (row.to) return `（開始日未設定）〜${toSlashYmd(row.to)}`;
+                return "期間未設定";
               })();
+              const isPast = row.status === "past";
+
               return (
                 <li
-                  key={w.title}
-                  className="flex flex-col gap-0.5 rounded-md bg-gray-50/80 px-3 py-2"
+                  key={row.title}
+                  className={
+                    "rounded-lg px-3 py-2.5 " +
+                    (isPast ? "bg-gray-50/60 opacity-75" : "bg-gray-50/90")
+                  }
                 >
-                  <span className="text-xs text-gray-500">{w.title}</span>
-                  <span>{line}</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={
+                        "text-sm font-medium " + (isPast ? "text-gray-500" : "text-gray-800")
+                      }
+                    >
+                      {row.shortTitle}
+                    </span>
+                    <span
+                      className={
+                        "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium " +
+                        badge.className
+                      }
+                    >
+                      {badge.label}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm tabular-nums text-gray-700">{periodLine}</p>
+                  {!isPast && (row.notifyStartYmd || row.notifyDayBeforeEndYmd) ? (
+                    <p className="mt-1.5 text-[11px] leading-snug text-gray-500">
+                      通知: 開始当日 {fmtNotifyYmd(row.notifyStartYmd)}
+                      {" · "}
+                      締切前日 {fmtNotifyYmd(row.notifyDayBeforeEndYmd)}
+                    </p>
+                  ) : null}
                 </li>
               );
             })}
           </ul>
         )}
-      </section>
-
-      <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-        <h2 className="mb-2 text-sm font-medium text-gray-800">お知らせが届く日（2回）</h2>
-        <p className="mb-2 text-xs text-gray-600">
-          「入力が始まる日（当日）」と「締切の前日」のタイミングです（日本時間）。
+        <p className="mt-3 text-[11px] text-gray-500">
+          入力期間は大学によって異なります。通知は日本時間の「開始当日」と「締切前日」に届きます。
         </p>
-        <ul className="max-h-56 space-y-1.5 overflow-y-auto text-sm">
-          {reminders.length === 0 && (
-            <li className="text-gray-500">日程がまだ登録されていないか、対象がありません。</li>
-          )}
-          {reminders.map((r) => (
-            <li
-              key={r.label + r.eventDate.getTime()}
-              className="flex flex-col rounded-md border border-gray-100 px-2 py-1.5"
-            >
-              <span className="text-gray-800">{r.label}</span>
-              <span className="text-xs text-gray-500">
-                対象日: {fmtDate(r.eventDate)}
-                {r.wouldFireToday ? (
-                  <span className="ml-1 font-medium text-blue-600">（今日お知らせの予定）</span>
-                ) : null}
-              </span>
-            </li>
-          ))}
-        </ul>
       </section>
     </div>
   );

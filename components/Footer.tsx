@@ -5,7 +5,10 @@ const disclaimer =
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-gray-100 bg-white px-4 py-6 text-xs leading-relaxed text-gray-600">
+    <footer
+      id="disclaimer"
+      className="mt-auto border-t border-gray-100 bg-white px-4 py-6 text-xs leading-relaxed text-gray-600 scroll-mt-4"
+    >
       <p className="mb-2 font-medium text-gray-800">免責事項</p>
       <p className="mb-4">{disclaimer}</p>
       <p>
